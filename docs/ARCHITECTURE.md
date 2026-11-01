@@ -48,6 +48,16 @@ stable worker name. Bump the worker build handshake together in engine-worker
 and browser-api when the runtime changes; old tabs must close once. Additive
 stock migrations are versioned and cannot reset chosen upgrades.
 
+Save imports accept the current version-1 export envelope or a legacy raw
+offline state. They validate core containers, item counts and supported schema
+versions, then run the same in-memory read repairs and write calculations before
+replacing a save. Rejected candidates do not create migration backups or alter
+the current save. Each accepted import preserves the previous file byte-for-byte
+under `runtime/backups/<captain>-before-import-*.json`; a failed final replacement
+also retains that backup. A backup can be supplied as a raw-state import through
+the existing import API. In browser builds these files are inside the existing
+IDBFS runtime mount; this change does not add a backup download UI.
+
 Passwords and signing keys are not source constants. Browser-local verifiers
 are device-encrypted, registered verifiers are encrypted at rest, and the
 production signing key must remain stable across deployments. Changing that
