@@ -1,6 +1,6 @@
 """Portable build/import/release tools. No game-server downloads or credentials."""
 from pathlib import Path, PurePosixPath
-import argparse, ast, csv, hashlib, io, json, os, re, shutil, subprocess, sys, zipfile
+import argparse, ast, csv, hashlib, io, json, os, re, shutil, subprocess, sys, tempfile, zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / '.local/assets'
@@ -33,6 +33,27 @@ def import_pack(source):
             if top == 'play' and path.name not in {'english-extra.json','offline-english-extra.json','offline-english-coverage.json','featured-skins.json'}: continue
             if not safe_name(rel): raise ValueError(f'Private or unsafe import path rejected: {rel}')
             planned.append((path, rel))
+    # Stage a clean replacement; do not merge an incomplete pack with old files.
+    stage = Path(tempfile.mkdtemp(prefix='.import-', dir=ROOT))
+    try:
+        _stage_import(source, planned, stage)
+        _promote_import(stage)
+    except ImportRecoveryError:
+        # A second disk failure during rollback must not delete the old copies.
+        raise
+    except BaseException:
+        shutil.rmtree(stage)
+        raise
+    else:
+        # Promotion is committed. Cleanup failure must not report a failed import.
+        shutil.rmtree(stage,ignore_errors=True)
+
+class ImportRecoveryError(RuntimeError):
+    pass
+
+def _stage_import(source, planned, stage):
+    for folder in ('engine/data', 'engine/public', 'assets'):
+        (stage/folder).mkdir(parents=True)
     archive = source/'simulation.zip'
     with zipfile.ZipFile(archive) as z:
         selected = []
@@ -43,18 +64,43 @@ def import_pack(source):
             if item.file_size > 40_000_000: raise ValueError('Unexpectedly large simulation entry.')
             if not item.is_dir(): selected.append(item)
         if sum(i.file_size for i in selected) > 100_000_000: raise ValueError('Simulation data exceeds import limit.')
+        if len({i.filename for i in selected}) != len(selected): raise ValueError('Duplicate simulation entry.')
         manifests = []
         for item in selected:
-            dest = ROOT/'engine'/item.filename
+            dest = stage/'engine'/item.filename
             dest.parent.mkdir(parents=True, exist_ok=True)
             data = z.read(item); dest.write_bytes(data)
             manifests.append({'path':'engine/'+item.filename,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)})
     for path, rel in planned:
-        dest=ASSETS/rel; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(path,dest)
-        manifests.append({'path':rel,'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'bytes':path.stat().st_size})
-    write_json(ROOT/'.local/import-manifest.json', {'version':1,'files':manifests})
-    print(f'Imported {len(manifests)} local files. No accounts, secrets or captured Python modules were imported.')
-    validate()
+        dest=stage/'assets'/rel; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(path,dest)
+        data=dest.read_bytes()
+        manifests.append({'path':rel,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)})
+    validate(stage/'engine/data/tables')
+    write_json(stage/'manifest.json', {'version':1,'files':manifests})
+
+def _promote_import(stage):
+    targets=[(stage/'engine/data',ROOT/'engine/data'),(stage/'engine/public',ROOT/'engine/public'),
+             (stage/'assets',ASSETS),(stage/'manifest.json',ROOT/'.local/import-manifest.json')]
+    for _,dest in targets:
+        if any(p.is_symlink() for p in [dest,*dest.parents]):
+            raise ValueError('Symlink import destinations are not supported.')
+    promoted=[];backups=[]
+    try:
+        for index,(candidate,dest) in enumerate(targets):
+            dest.parent.mkdir(parents=True,exist_ok=True)
+            if dest.exists():
+                backup=stage/('previous-'+str(index));os.replace(dest,backup);backups.append((backup,dest))
+            os.replace(candidate,dest);promoted.append(dest)
+    except BaseException:
+        try:
+            for dest in reversed(promoted):
+                if dest.is_dir():shutil.rmtree(dest)
+                else:dest.unlink()
+            for backup,dest in reversed(backups):os.replace(backup,dest)
+        except BaseException as error:
+            raise ImportRecoveryError(f'Import rollback needs manual recovery; previous files retained in {stage}') from error
+        raise
+    print('Imported validated local pack. No accounts, secrets or captured Python modules were imported.')
 
 def validate(directory=None):
     directory=Path(directory) if directory else DATA/'tables'
