@@ -3,7 +3,7 @@
  const $=s=>document.querySelector(s),frame=$('#game-frame'),nav=$('nav[aria-label="Offline tools"]'),panels=$('#tool-panel');
  const runtime=()=>frame.contentWindow?.PirateOfflineRuntime,combat=()=>frame.contentWindow?.PirateCombatTools;
  const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
- async function api(path,body){const r=await fetch(path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const v=await r.json();if(!r.ok||v.ok===false)throw Error(v.detail||v.error?.message||v.error||'Request failed.');return v;}
+ async function api(path,body,headers={}){const r=await fetch(path,{method:body===undefined?'GET':'POST',headers:{...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},body:body===undefined?undefined:JSON.stringify(body)});const v=await r.json();if(!r.ok||v.ok===false)throw Object.assign(Error(v.detail||v.error?.message||v.error||'Request failed.'),{status:r.status,code:v.code});return v;}
  function panel(id,label){const b=el('button',label,'nav');b.dataset.tab=id;nav.append(b);const p=el('section',undefined,'tool-tab');p.dataset.panel=id;p.hidden=true;panels.append(p);b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(n=>n.classList.toggle('active',n===b));document.querySelectorAll('[data-panel]').forEach(n=>n.hidden=n!==p);p.dispatchEvent(new Event('opened'));};return p;}
  function field(parent,label,tag='input'){const l=el('label',label),input=document.createElement(tag);input.setAttribute('aria-label',label);l.append(input);parent.append(l);return input;}
  function button(parent,label,fn){const b=el('button',label);parent.append(b);b.onclick=async()=>{b.disabled=true;try{await fn();}catch(e){status.textContent=e.message;}finally{b.disabled=b.dataset.locked==='true';}};return b;}
@@ -74,8 +74,10 @@
  const socialPanel=panel('social','♧ Friends, chat & PvP lobby');socialPanel.append(el('h2','Friends & sandbox lobbies'),el('p','Online features use your assigned captain identity. Ready shares only the selected team and combat stats. Your inventory and local save are not uploaded.'));
  let connected=false,username='',roomId='',chatTarget='',socialBusy=false,roomData=null,serverOffset=0;
  const socialStatus=el('p','','sandbox-status');socialPanel.append(socialStatus);
- const socialApi=(path,body)=>api('/sandbox-social/'+path,body);
- button(socialPanel,'Connect social features',async()=>{const auth=await api('/api/social-session',{});username=auth.username;connected=true;roomId=localStorage.getItem('pirate-room-'+username)||'';await pollSocial();});
+ const socialClient=import('/play/social-client.mjs');
+ function disconnectSocial(){connected=false;roomId='';roomData=null;chatTarget='';roomSignature='';friendsList.replaceChildren();roomList.replaceChildren();roomView.replaceChildren();chat.replaceChildren();targetSelect.replaceChildren();socialStatus.textContent='Captain changed or session expired. Reconnect social features.';}
+ const socialApi=async(path,body)=>(await socialClient).socialRequest({api,connected,username,disconnect:disconnectSocial},path,body);
+ button(socialPanel,'Connect social features',async()=>{connected=false;const auth=await api('/api/social-session',{}),local=await api('/api/me');if(auth.username!==local.account.username){disconnectSocial();throw Error('Captain changed. Reconnect social features for this account.');}username=auth.username;connected=true;roomId=localStorage.getItem('pirate-room-'+username)||'';await pollSocial();});
  const friendsList=el('div'),friend=field(socialPanel,'Captain username');friend.placeholder='Enter a registered username';friend.maxLength=24;
  button(socialPanel,'Send friend request',()=>socialApi('friend',{username:friend.value,action:'request'}).then(pollSocial));socialPanel.append(friendsList,el('h3','PvP lobby'));
  const roomName=field(socialPanel,'Lobby name');roomName.maxLength=60;button(socialPanel,'Create lobby',async()=>{const r=await socialApi('create',{name:roomName.value});roomId=r.id;localStorage.setItem('pirate-room-'+username,roomId);await pollSocial();});
