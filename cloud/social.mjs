@@ -5,6 +5,10 @@ const pair=(a,b)=>[a,b].sort().join(':');
 const clean=(value,max)=>String(value||'').replace(/[\u0000-\u0008\u000b-\u001f]/g,'').trim().slice(0,max);
 export async function social(request,env){
  const u=await captainSession(request,env);if(!u)return json({error:'Connect your captain to social features first.'},401);
+ // The cookie is shared across tabs. Treat this header only as caller intent;
+ // the signed session remains the authority for the authenticated identity.
+ const expected=request.headers.get('X-Pirate-Captain');
+ if(!valid(expected)||expected!==u)return json({error:'Captain changed. Reconnect social features for this account.',code:'CAPTAIN_MISMATCH'},409);
  if(!env.DB)return json({error:'Social storage is unavailable.'},503);
  const url=new URL(request.url),db=env.DB,now=Date.now();
  if(request.method!=='GET'&&request.method!=='POST')return json({error:'Method not allowed.'},405);
