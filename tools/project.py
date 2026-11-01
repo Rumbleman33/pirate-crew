@@ -45,7 +45,8 @@ def import_pack(source):
         shutil.rmtree(stage)
         raise
     else:
-        shutil.rmtree(stage)
+        # Promotion is committed. Cleanup failure must not report a failed import.
+        shutil.rmtree(stage,ignore_errors=True)
 
 class ImportRecoveryError(RuntimeError):
     pass
