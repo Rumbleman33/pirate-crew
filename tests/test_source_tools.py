@@ -15,13 +15,13 @@ class PathAndDataTests(unittest.TestCase):
    self.assertFalse(project.safe_name(name),name)
   self.assertTrue(project.safe_name('data/tables/MonsterRef.csv'));self.assertTrue(project.safe_name('.env.example'))
  def fixture(self,root):
-  rows={'GeneralRef':[{'refId':'1'}],'MonsterRef':[{'refId':'10'}],'SceneRef':[{'refId':'100'},{'refId':'101'}],'TowerLevelRef':[{'refId':'1','monsterId':'10'}],'GeneralSkinRef':[{'skinId':'20','generalId':'1'}],'NpcRef':[{'refId':'30','type':'5','bossId':'10','sceneId':'100','data':'101'}]}
+  rows={'MountStageRef':[{'refId':'1','startExp':'0','endExp':'0'}],'VoyageTitleRef':[{'refId':'1','maxLevel':'100','next':'0','attrs':''}],'GeneralRef':[{'refId':'1','type':'1','speed':'72'}],'MonsterRef':[{'refId':'10'}],'SceneRef':[{'refId':'100'},{'refId':'101'}],'TowerLevelRef':[{'refId':'1','monsterId':'10'}],'GeneralSkinRef':[{'skinId':'20','generalId':'1'}],'NpcRef':[{'refId':'30','type':'5','bossId':'10','sceneId':'100','data':'101'}]}
   for name,values in rows.items():
    with (root/(name+'.csv')).open('w',newline='',encoding='utf8') as f:
     writer=csv.DictWriter(f,fieldnames=list(values[0]));writer.writeheader();writer.writerows(values)
  def test_validator_accepts_complete_synthetic_joins(self):
   with tempfile.TemporaryDirectory(dir=TEST_TEMP) as folder:
-   root=Path(folder);self.fixture(root);self.assertEqual(len(project.validate(root)),6)
+   root=Path(folder);self.fixture(root);self.assertEqual(len(project.validate(root)),8)
  def test_validator_rejects_missing_monster(self):
   with tempfile.TemporaryDirectory(dir=TEST_TEMP) as folder:
    root=Path(folder);self.fixture(root);(root/'TowerLevelRef.csv').write_text('refId,monsterId\n1,999\n',encoding='utf8')

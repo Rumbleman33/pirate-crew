@@ -32,3 +32,18 @@ modified by this build. No account or save directory is packaged.
 
 Do not manually edit the generated ZIP, generated knowledge chunks or `dist/`.
 Fix their authored inputs and rebuild instead.
+
+## Startup acceptance
+
+Table validation requires nonempty GeneralRef, MonsterRef, SceneRef,
+TowerLevelRef, MountStageRef and VoyageTitleRef. GeneralRef must include type and
+speed; mount stages need integer start/end EXP; Voyage must include the initial
+title 1 and its level cap. A disposable store is seeded, loaded and reopened using
+the candidate tables. No current captain or current runtime directory is touched.
+Other present tables used during startup are also exercised by this smoke check.
+
+The default validate command checks catalog.json command IDs/initialization
+references and schemas.json field-list shapes separately from CSV validation.
+Passing these structural checks does not certify a particular captured client
+version. Full v15 browser startup, the captured-data integration suite, native
+screens and browser save durability remain required release checks.
