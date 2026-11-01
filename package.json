@@ -1,0 +1,20 @@
+{
+  "name": "pirate-crew",
+  "version": "0.15.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {"node": ">=22.13.0"},
+  "scripts": {
+    "dev": "node tools/dev.mjs",
+    "build": "python tools/project.py build",
+    "import": "python tools/project.py import",
+    "validate:data": "python tools/project.py validate",
+    "check": "python tools/project.py check",
+    "test": "node tools/test.mjs",
+    "test:integration": "python tools/project.py integration",
+    "release:check": "python tools/project.py release",
+    "preview": "node tools/preview.mjs"
+  },
+  "devDependencies": {"wrangler": "4.92.0"}
+}

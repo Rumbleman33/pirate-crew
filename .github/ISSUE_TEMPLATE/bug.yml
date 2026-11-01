@@ -1,0 +1,21 @@
+name: Bug report
+description: Report a reproducible offline behavior problem
+body:
+  - type: markdown
+    attributes:
+      value: "Do not attach passwords, tokens, account exports, captures or private logs."
+  - type: input
+    id: version
+    attributes: {label: Source version / local capture version}
+    validations: {required: true}
+  - type: textarea
+    id: steps
+    attributes: {label: Steps to reproduce, description: Include feature and character/boss/item IDs where relevant.}
+    validations: {required: true}
+  - type: textarea
+    id: actual
+    attributes: {label: Expected and actual behavior}
+    validations: {required: true}
+  - type: textarea
+    id: evidence
+    attributes: {label: Sanitized screenshot or public-safe error excerpt}

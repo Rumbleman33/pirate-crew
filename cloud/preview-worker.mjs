@@ -1,0 +1,1 @@
+export default {fetch(request,env){const url=new URL(request.url);if(['/captain-auth/','/sandbox-social/','/game-assistant/','/api/'].some(p=>url.pathname.startsWith(p)))return Response.json({error:'Source previews have no account, game or AI APIs.'},{status:404});return env.ASSETS.fetch(request);}};

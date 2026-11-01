@@ -1,0 +1,7 @@
+{
+  "name": "pirate-crew-source-preview",
+  "main": "cloud/preview-worker.mjs",
+  "compatibility_date": "2026-05-22",
+  "preview_urls": true,
+  "assets": {"directory": "./dist", "binding": "ASSETS", "run_worker_first": true}
+}

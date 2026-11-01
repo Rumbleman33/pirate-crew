@@ -1,0 +1,261 @@
+{
+  "baseline": "offline-v15",
+  "files": [
+    {
+      "path": "engine/offline_accounts.py",
+      "sha256": "64fae6811da38a3450778faef76d04a78150d8c57d7de0760781d42da346cd26"
+    },
+    {
+      "path": "engine/offline_companions.py",
+      "sha256": "09f26ba50e2d321955144cabd9a9d5b10e4688ae7fef88717024c9b46f3e255f"
+    },
+    {
+      "path": "engine/offline_core.py",
+      "sha256": "bef057cb16009bfd6fb8670b8b0c897c4eb6bfa966e920cd97f1b9506be4f6d3"
+    },
+    {
+      "path": "engine/offline_draws.py",
+      "sha256": "739db7673523307e1605045c0a19bd48970e6e44ae9a83c0754a7d9a063d93bc"
+    },
+    {
+      "path": "engine/offline_encounters.py",
+      "sha256": "6766fb857e001de9153d7472dfdc49f52d31b299a2ca851fc8a340e6c53c6337"
+    },
+    {
+      "path": "engine/offline_english.py",
+      "sha256": "113725d50b881090056fe5451acd4723ad4c51d4a5f12b37f95b33ca3f42f201"
+    },
+    {
+      "path": "engine/offline_equipment.py",
+      "sha256": "394f4117cf788e08525395e5a91355bfee1da9b2366aebe63751b43678881620"
+    },
+    {
+      "path": "engine/offline_progression.py",
+      "sha256": "21abe33ba6c4d03e44211ad89fcdbb9181c12ebfa0c7a6bba1b6c6f7070b4798"
+    },
+    {
+      "path": "engine/offline_stages.py",
+      "sha256": "5a27913b9af22a5df9994fed9711ddcf8a8df9b6de27e15c191734a1d8967942"
+    },
+    {
+      "path": "engine/offline_stats.py",
+      "sha256": "cf139b8ee45d41d372bc9ed9aeb61945ded01a9f9cd294fc60053704045c5307"
+    },
+    {
+      "path": "engine/offline_systems.py",
+      "sha256": "07360ebe0eb61e73e478ea52e9471d4f4bf5692e2c98f0b9ca1c96b3ee827870"
+    },
+    {
+      "path": "engine/offline_testing.py",
+      "sha256": "84473e4d91f89e2a1640d82cedc02c70adc45751ca9d692d84858afd440f05b3"
+    },
+    {
+      "path": "engine/offline_voyage.py",
+      "sha256": "83feebb469a0b0c91dd3c8d95f5e8a4341c6cdd7f00747a7e2d5bf6ef4472c1c"
+    },
+    {
+      "path": "engine/offline_workshop.py",
+      "sha256": "037105a2cbe65c046eb409dedfa61c09f62d7eb7c74c986a10a1453f2d0e47ed"
+    },
+    {
+      "path": "engine/offline_world.py",
+      "sha256": "0bcebd50d43d305b72c21cba4a5ae1d0c24afb79b362cb036d1fc2083ff10e19"
+    },
+    {
+      "path": "engine/tests/test_artifacts_gear_inventory.py",
+      "sha256": "9b63a6f5541d025a669cf5d67c62d9cd72c3602a45c2aaffdd1f685df87ba145"
+    },
+    {
+      "path": "engine/tests/test_feature_repairs.py",
+      "sha256": "460033be3096125236afbdd66b6b2a289edb732741959b41eaf5ab233252762c"
+    },
+    {
+      "path": "engine/tests/test_offline_core.py",
+      "sha256": "f897913811f2b6d5fb4d581c5b483702faf9b0ce45f8dda44b927722c92843b0"
+    },
+    {
+      "path": "engine/tests/test_offline_encounters_draws.py",
+      "sha256": "3fa7faf7fc6884b5211880c046acf187440afc27e7df1d2669b3772adaf6cd9e"
+    },
+    {
+      "path": "engine/tests/test_offline_progression.py",
+      "sha256": "dc69c1a5a314b5e432b9ceae40c671fd8c374a52687b238bd1fce4016dba4fee"
+    },
+    {
+      "path": "engine/tests/test_tester_fixes.py",
+      "sha256": "e360d8afa0cfa1f4cf7556e26ed3f1a245c6d1501152c0d2a7fec1eedba7f8ae"
+    },
+    {
+      "path": "engine/tests/test_testing_presets.py",
+      "sha256": "63227bf929375eec5c9aa10dab133eb3852b3691466b3af2dba64cbdfbb6b456"
+    },
+    {
+      "path": "engine/tests/test_voyage_and_stock.py",
+      "sha256": "cadb72d197e05124241291928cdbec2000fd2ba78005e64d4a961a0a4f1ead44"
+    },
+    {
+      "path": "web/public/index.html",
+      "sha256": "8ad7ba5d43f650607817e88f7da122385282c89054f4a090a61a351d614a7dcd"
+    },
+    {
+      "path": "web/public/app.mjs",
+      "sha256": "e5d1d235f5a141f59ff6c11befc376b6459edd2cc2da00210a124110bba4ab51"
+    },
+    {
+      "path": "web/public/core.mjs",
+      "sha256": "39d94637ce7e540c78451e1618b2fbfcaa54a8ba353dd150e5bf0961f8837165"
+    },
+    {
+      "path": "web/public/library.mjs",
+      "sha256": "a4eba94e657f3bcf7a72e36d7c65e55169bf21ec4ae73da411091004e350da25"
+    },
+    {
+      "path": "web/public/style.css",
+      "sha256": "f3db4f8914b6a3d3dc7d56176d10df303a00f66dc251debb3dc6f9d6d972c70a"
+    },
+    {
+      "path": "web/public/futuristic.css",
+      "sha256": "605097e36cb4d4283a247a3acef2c8c0eef408f7565d020f3f891cc798e3683f"
+    },
+    {
+      "path": "web/public/model-viewer.html",
+      "sha256": "1278adf14b777a52668b7570878c3aee98bcb3f1238ee99c970bc4f1b0e2ef96"
+    },
+    {
+      "path": "web/public/model-viewer.js",
+      "sha256": "27f270cbfa8f20ef13fb95e79cf0b5d8d71862d3d924d620e7ff3563b7d54982"
+    },
+    {
+      "path": "web/public/model-viewer.css",
+      "sha256": "e97e5b91f65a75cf19d970c3dc27c8032d4b148d1bd5d1aceb9f069e9251f42d"
+    },
+    {
+      "path": "web/public/engine-worker.js",
+      "sha256": "732cd04eae7286f70d53b4d559877f0a53968192e1bd9f3de108a0fe42c9457f"
+    },
+    {
+      "path": "web/public/game-assets-sw.js",
+      "sha256": "e6c43ded4c8bf6e620a1efbe01ebe7e804acbb18b153deff1e7cfef7cf8851d2"
+    },
+    {
+      "path": "web/public/play/app.js",
+      "sha256": "b2f3326b5544110e3cca4720ef47dbc0d5974c95e2fbf0a82d8247e5a37073a4"
+    },
+    {
+      "path": "web/public/play/browser-api.js",
+      "sha256": "9c8fdc4ce5f8cc402aba89e985306eec2285a945754f368871f7205f6ba49316"
+    },
+    {
+      "path": "web/public/play/combat-tools.js",
+      "sha256": "6762d5eafa1c88728ca8801f3b9d0f449acf25e24145a2a975efd5aaab9f94a2"
+    },
+    {
+      "path": "web/public/play/draw-lab.css",
+      "sha256": "a0724fd03edd1e0e3b79eaa766d1c808e343012abd554ae432f4112e539aeb4e"
+    },
+    {
+      "path": "web/public/play/draw-lab.js",
+      "sha256": "2039930685db75e36b20a4bd1b88cd6aaa83b335cfbf899e7a32db79d4f299b1"
+    },
+    {
+      "path": "web/public/play/index.html",
+      "sha256": "6971eb629aeff9d519b20a4bb20c9e5b7d04371e4fab31394522131f8cb01fbb"
+    },
+    {
+      "path": "web/public/play/offline-english.js",
+      "sha256": "7dc34db67ccdb371a2181b8914635d9ef961f4cc9cd75edc86bfa1c6a5d22891"
+    },
+    {
+      "path": "web/public/play/runtime-bridge.js",
+      "sha256": "a7ffbf8b1fce145b9c2d85e89bb8682803e9df35b0f37d76b4649cc467459018"
+    },
+    {
+      "path": "web/public/play/runtime.html",
+      "sha256": "903a71d6862e14bf5ec7d936eda5a8ca785967211b84aefac49f978540d46147"
+    },
+    {
+      "path": "web/public/play/sandbox-tools.css",
+      "sha256": "4465eaa659a9a56a4c20f54f64262d477ae6a7c1a78cf9f216498be9923166f2"
+    },
+    {
+      "path": "web/public/play/sandbox-tools.js",
+      "sha256": "bd5611fea6c58b43733b2df47f19b4d47a68d83843fd4793b70ff874798d7760"
+    },
+    {
+      "path": "web/public/play/skin-studio.css",
+      "sha256": "e78c38c46b3050f207cc955968896b392fd9c477302f058e8118ab740451b5a6"
+    },
+    {
+      "path": "web/public/play/skin-studio.js",
+      "sha256": "8f611b4ebfd876e19085203cc0892fc408794d7c89eb241ce805c84cfbaae38a"
+    },
+    {
+      "path": "web/public/play/skin-workbench.js",
+      "sha256": "ada8d2b49fd20422cb44035663133adfe04ba9fad774aae0967aa2958c8a3bf0"
+    },
+    {
+      "path": "web/public/play/styles.css",
+      "sha256": "73bdcf7948eb9da8ad681f78fd79e26f13e299f561d527dbd10a05cc2d83f021"
+    },
+    {
+      "path": "web/public/play/testing-ui.js",
+      "sha256": "919a3b9913aad9c61daed18285486db70aca59574c6b4bd16f3485797bca7366"
+    },
+    {
+      "path": "web/public/knowledge/retrieval.mjs",
+      "sha256": "89ce7b6f25d58b9623f91fcf30ed86d33159d14b602d5bdabffd28a947e38137"
+    },
+    {
+      "path": "cloud/captain-auth.mjs",
+      "sha256": "60e3aa9376d2d5c0636345aae285c42783eda68418282816b3187649d650a93c"
+    },
+    {
+      "path": "cloud/social.mjs",
+      "sha256": "35445683732ae29b7fa2a5e5ca73fc0ef82d6be0b3c84d7a1d043d34086b525f"
+    },
+    {
+      "path": "cloud/game-assistant.mjs",
+      "sha256": "73bda55fc804e9eb911cbc090a8505c4e709e5716c5016e031d4f1caebe2dcb7"
+    },
+    {
+      "path": "cloud/asset-aliases.json",
+      "sha256": "6d40839d4c076046a5d76a1f02990028c1ef4e82bce772d6e5bfe9cab282fe11"
+    },
+    {
+      "path": "cloud/migrations/0000_cute_shadowcat.sql",
+      "sha256": "b8257d8ecefc87384c88d78b9646d8885e630ba0392333108c4071cdbbd5d417"
+    },
+    {
+      "path": "cloud/migrations/0001_marvelous_iron_fist.sql",
+      "sha256": "82bd1994389ee6a32bd479df3b8f5633c989ef8e211d490a5d06cd596326c44b"
+    },
+    {
+      "path": "cloud/migrations/0002_open_ricochet.sql",
+      "sha256": "e1b06bfeddd64af72de6b94396c4f1e1586b7d7b62c2b85d9bd0831671237e34"
+    },
+    {
+      "path": "tests/test-credential-storage.mjs",
+      "sha256": "1f50746e2ddc2d1bc81e13a1bbfca11342deaf1f9f64154cf24c72f82511ded2"
+    },
+    {
+      "path": "tests/test-local-verifier.mjs",
+      "sha256": "5dafdfcc62cab0edb7848da9649a8edea1a8c761e3704f738127641dada38d0b"
+    },
+    {
+      "path": "tests/test-combat-observer.mjs",
+      "sha256": "99999fd954f5eb4bd125f21d8b921d19c92f507b53ae6337783f36d04fa88ed5"
+    },
+    {
+      "path": "tests/test-practice-lifecycle.mjs",
+      "sha256": "12bbe9401307bcca7268ccfad86ff0bd5c96981f79ccdc87099ef0e8649eb664"
+    },
+    {
+      "path": "tests/test-revisions.mjs",
+      "sha256": "f000c3ae281c40e7fc6a436931707e47573fb36b965b3ccf4b0964e2d193e279"
+    },
+    {
+      "path": "tests/test-game-assistant.mjs",
+      "sha256": "f3fc7cbf60cbfd53953f0342c96565f7fa8de1e2f38ff29c51ad5ed5c9710848"
+    }
+  ]
+}

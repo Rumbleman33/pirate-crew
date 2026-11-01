@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head><script src="/play/browser-api.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; connect-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Pirates — original offline client</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08121f;color:#e5edf9;font-family:system-ui,sans-serif}
+    #runtime-message{position:fixed;inset:0;display:grid;place-content:center;text-align:center;padding:36px;z-index:100000;background:#08121f}
+    #runtime-message[hidden]{display:none}#runtime-message p{max-width:580px;line-height:1.6;color:#a8bbd5}#runtime-message pre{white-space:pre-wrap;text-align:left;max-height:45vh;overflow:auto;color:#ffca9d}
+    #runtime-tools{position:fixed;top:9px;right:9px;z-index:100001;display:flex;gap:6px}
+    .embedded #runtime-tools{display:none}
+    #runtime-tools button{border:1px solid #7897b8;border-radius:7px;background:#10263de8;color:white;padding:8px 11px;cursor:pointer;font:600 12px system-ui}
+    #runtime-label{position:fixed;bottom:5px;left:8px;z-index:100001;padding:3px 6px;border-radius:4px;background:#06121bd9;color:#93edc4;font:10px system-ui;pointer-events:none}
+  </style>
+</head>
+<body>
+  <section id="runtime-message"><h2>Original game client</h2><p>Waiting for your local offline account. This client uses local assets and a simulated server on this computer.</p><pre id="runtime-error"></pre></section>
+  <nav id="runtime-tools" aria-label="Original client tools"><button id="runtime-back" type="button">← Back</button><button id="runtime-gm" type="button">GM panel</button><button id="runtime-main" type="button">Main view</button></nav>
+  <div id="runtime-label">OFFLINE · LOCAL SIMULATION</div>
+  <script src="/game/library.js"></script>
+  <script src="/game/bundle-offline.js"></script>
+  <script src="/play/offline-english.js?v=20261031-2"></script>
+  <script src="/play/testing-ui.js?v=20261031-2"></script>
+  <script src="/play/combat-tools.js?v=20261031-2"></script>
+  <script src="/play/runtime-bridge.js?v=20261031-2"></script>
+  <script src="/play/skin-studio.js?v=20261031-2"></script>
+</body>
+</html>
