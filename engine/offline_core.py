@@ -10,10 +10,12 @@ from copy import deepcopy
 import csv
 import json
 import math
+import os
 from pathlib import Path
 import re
 import secrets
 import threading
+import tempfile
 import time
 from typing import Any
 
@@ -199,10 +201,17 @@ class OfflineStore:
 
     def _read(self, username: str) -> dict:
         state = json.loads(self._path(username).read_text(encoding="utf-8"))
-        migrated=integer(state.get('saveSchemaVersion'))<14
-        if migrated:
+        if integer(state.get('saveSchemaVersion')) < 14:
             backup=self.saves.parent/'backups'/(username+'-before-v14.json')
             if not backup.exists():atomic_json(backup,state)
+        if self._normalize_state(state):
+            self._write(username, state)
+        return state
+
+    def _normalize_state(self, state: dict) -> bool:
+        """Apply the read-time migrations/repairs without touching save files."""
+        migrated=integer(state.get('saveSchemaVersion'))<14
+        if migrated:
             state['saveSchemaVersion']=14
             state['settings'].setdefault('autoVoyageObjectives',True)
         state.setdefault("generalSkins", {})
@@ -234,9 +243,7 @@ class OfflineStore:
             equip['equipId']=str(equip['equipId'])
         self._sync_player_attrs(state)
         self.progression.sync_achievements(state)
-        if repaired:
-            self._write(username, state)
-        return state
+        return repaired
 
     def prepare_test_sandbox(self, account: str | dict, force=False) -> dict:
         """One-time additive stock grant. Existing purchases and upgrades survive."""
@@ -280,12 +287,15 @@ class OfflineStore:
         state['settings']['testStockVersion'] = 5
         state['settings']['equipmentCapacity'] = 10000
 
-    def _write(self, username: str, state: dict):
+    def _prepare_write(self, state: dict):
         self.voyage.info(state)
         self.progression.initialize_state(state)
         self._sync_player_attrs(state)
         self.progression.sync_achievements(state)
         state["updatedAt"] = max(now_ms(), integer(state.get("updatedAt")) + 1)
+
+    def _write(self, username: str, state: dict):
+        self._prepare_write(state)
         atomic_json(self._path(username), state)
 
     def _seed(self, username: str) -> dict:
@@ -340,21 +350,84 @@ class OfflineStore:
     def import_save(self, account: str | dict, document: dict) -> dict:
         with self._lock:
             username = self._username(account)
-            supplied = document.get("state", document)
-            if not isinstance(supplied, dict) or supplied.get("mode") != "offline":
-                raise SimulationError("INVALID_SAVE", "Select an offline game save exported by this build")
-            if not isinstance(supplied.get("inventory"), dict) or not isinstance(supplied.get("generals"), dict):
-                raise SimulationError("INVALID_SAVE", "Offline save is missing inventory or roster")
-            state = deepcopy(supplied)
-            identity = self.accounts.public_account(username)
-            state.update(username=username, account=identity, playerId=identity["playerId"], mode="offline")
-            state.setdefault("player", {}).update(playerId=identity["playerId"], nickname=identity["displayName"])
-            for key, count in state["inventory"].items():
-                if integer(count, -1) < 0 or integer(count) > MAX_QUANTITY:
-                    raise SimulationError("INVALID_SAVE", "Item counts must be nonnegative and within the local limit")
-            # A local import cannot replace login hashes or another account's identity.
-            self._write(username, state)
+            try:
+                if not isinstance(document, dict):
+                    raise ValueError("Select an offline game save exported by this build")
+                if 'state' in document:
+                    if document.get('format') != 'pirates-offline-save' or type(document.get('version')) is not int or document['version'] != 1:
+                        raise ValueError("Unsupported offline save export format or version")
+                state = deepcopy(document.get('state', document))
+                self._validate_import_shape(state, username)
+                # Round-trip JSON before normalization: reject non-finite numbers,
+                # non-JSON objects and keys that would change meaning on disk.
+                encoded = json.dumps(state, allow_nan=False)
+                if json.loads(encoded) != state:
+                    raise ValueError("Save must contain JSON objects with string keys")
+                identity = self.accounts.public_account(username)
+                state.update(username=username, account=identity, playerId=identity['playerId'], mode='offline')
+                state['player'].update(playerId=identity['playerId'], nickname=identity['displayName'])
+                # Exercise the same read repairs and write calculations before
+                # backing up or replacing anything. Migration backups belong to
+                # actual reads, never to a rejected import candidate.
+                self._normalize_state(state)
+                self._prepare_write(state)
+                json.dumps(state, allow_nan=False)
+            except (ValueError, TypeError, KeyError, IndexError, AttributeError, OverflowError, RecursionError) as error:
+                raise SimulationError('INVALID_SAVE', f'Offline save cannot be loaded: {error}') from error
+
+            previous = self._path(username).read_bytes()
+            try:
+                old = json.loads(previous)
+                if isinstance(old, dict):
+                    state['updatedAt'] = max(state['updatedAt'], integer(old.get('updatedAt')) + 1)
+            except (ValueError, TypeError):
+                pass  # A valid import can recover a corrupt existing save.
+            backups = self.runtime / 'backups'
+            backups.mkdir(parents=True, exist_ok=True)
+            backup = None
+            try:
+                with tempfile.NamedTemporaryFile(prefix=username+'-before-import-', suffix='.json', dir=backups, delete=False) as handle:
+                    backup = Path(handle.name)
+                    handle.write(previous)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+            except OSError:
+                if backup is not None:
+                    backup.unlink(missing_ok=True)
+                raise
+            # Keep the complete backup even if the final atomic replacement fails.
+            atomic_json(self._path(username), state)
             return deepcopy(state)
+
+    def _validate_import_shape(self, state, username):
+        if not isinstance(state, dict) or state.get('mode') != 'offline':
+            raise ValueError('Select an offline game save exported by this build')
+        for key, maximum in (('schemaVersion', 1), ('saveSchemaVersion', 14)):
+            value = state.get(key, maximum if key == 'schemaVersion' else 0)
+            if type(value) is not int or not 0 <= value <= maximum or (key == 'schemaVersion' and value != 1):
+                raise ValueError('Unsupported '+key)
+        required = {'inventory':dict, 'generals':dict, 'player':dict, 'settings':dict,
+                    'scene':dict, 'equipment':list, 'tasks':list, 'potential':dict,
+                    'mail':list, 'shopPurchases':dict, 'appends':dict, 'doneValues':dict,
+                    'instanceLevels':dict, 'limitAttrs':dict, 'auctions':list,
+                    'messages':list, 'clientActions':list, 'claimedRewards':list}
+        for key, kind in required.items():
+            if not isinstance(state.get(key), kind):
+                raise ValueError(key+' has an invalid or missing container')
+        # Keep optional legacy additions optional, but reject wrong container
+        # types rather than allowing empty values to bypass read-time checks.
+        for key, default in self._seed(username).items():
+            if key in state and isinstance(default, (dict, list)) and not isinstance(state[key], type(default)):
+                raise ValueError(key+' has an invalid container')
+        for key in ('equipment','tasks','pets','mounts','mail','clientActions','messages','auctions','gemSlots'):
+            if key in state and (not isinstance(state[key], list) or any(not isinstance(row, dict) for row in state[key])):
+                raise ValueError(key+' must be a list of objects')
+        for key in ('generals','generalSkins','treasures','footprints','suitStages','posters','personalities','uniques','limitAttrs'):
+            if key in state and (not isinstance(state[key], dict) or any(not isinstance(row, dict) for row in state[key].values())):
+                raise ValueError(key+' must map identifiers to objects')
+        for count in state['inventory'].values():
+            if type(count) is not int or not 0 <= count <= MAX_QUANTITY:
+                raise ValueError('Item counts must be bounded nonnegative integers')
 
     def gm_catalog(self) -> list[dict]:
         extra=[(name,desc,arg,'testing') for name,desc,arg in [('talentLevel','Set exact talent level (0–330)','115'),('captainLevel','Set captain level independently of Voyage cap','115'),('charactersLevel','Set owned character levels','115'),('maxHaki','Max all elemental Haki slots at captured caps',''),('maxPets','Max owned and unowned captured pets and collections',''),('maxMounts','Max mounts and reins; preserve assignments',''),('maxTreasures','Max treasures and materials',''),('maxShips','Max ships, dock, cabin and charts',''),('maxAllSystems','Max pets, mounts, treasures and ships',''),('bossPractice','Practice a captured boss without progression rewards','{"kind":"tower","id":1}')]]
