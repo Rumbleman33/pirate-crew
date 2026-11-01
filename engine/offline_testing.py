@@ -64,6 +64,9 @@ def apply(store, state, command, arg):
         for cmd in ('maxPets','maxMounts','maxTreasures','maxShips'):apply(store,state,cmd,'')
         return 'Pets, mounts, treasures and ships maxed at their captured caps. Assign mounts and choose pet skills yourself.',{'type':'testingRefresh','system':'all'}
     elif command=='bossPractice':
+        previous=state.get('activeInstance')
+        if previous and not (previous.get('settled') or previous.get('left')):
+            store.systems.fail('ACTIVE_ENCOUNTER','Leave the current local encounter before starting boss practice.')
         request=json.loads(arg);kind=request.get('kind');rid=int(request.get('id',0));catalog=boss_catalog(store)
         selected=next((r for r in catalog if r['kind']==kind and r['id']==rid),None)
         if not selected:store.systems.fail('UNKNOWN_PRACTICE_BOSS','Choose a captured boss from the selector.')
@@ -73,6 +76,7 @@ def apply(store, state, command, arg):
         capacity=store.progression.crew_capacity(state)
         if not isinstance(generals,list) or not 1<=len(generals)<=min(10,capacity) or len(set(generals))!=len(generals):store.systems.fail('INVALID_PRACTICE_LINEUP','Choose distinct owned fighters within your unlocked crew capacity.')
         for gid in generals:store._general(state,int(gid))
+        if previous:store.encounters._archive(state,previous)
         state['settings']['practiceGenerals']=list(map(int,generals))
         active=store.encounters._make(state,201,1,generals,'practice',custom_waves=[{'wave':1,'data':'#'.join(f'{mid}_1_0_0_50' for mid in selected['monsterIds'])}])
         active.update(practice=True,practiceBoss=selected)
