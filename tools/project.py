@@ -1,6 +1,6 @@
 """Portable build/import/release tools. No game-server downloads or credentials."""
 from pathlib import Path, PurePosixPath
-import argparse, ast, csv, hashlib, io, json, os, re, shutil, subprocess, sys, zipfile
+import argparse, ast, csv, hashlib, io, json, os, re, shutil, subprocess, sys, tempfile, zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / '.local/assets'
@@ -58,7 +58,11 @@ def import_pack(source):
 
 def validate(directory=None):
     directory=Path(directory) if directory else DATA/'tables'
-    required={'GeneralRef':['refId'],'MonsterRef':['refId'],'SceneRef':['refId'],'TowerLevelRef':['refId','monsterId']}
+    # Unconditional seed/read dependencies, plus the existing boss contracts.
+    required={'GeneralRef':['refId','type','speed'],'MonsterRef':['refId'],
+              'SceneRef':['refId'],'TowerLevelRef':['refId','monsterId'],
+              'MountStageRef':['refId','startExp','endExp'],
+              'VoyageTitleRef':['refId','maxLevel','next','attrs']}
     rows={};errors=[]
     for path in sorted(directory.glob('*.csv')):
         with path.open(encoding='utf-8-sig', newline='') as f:
@@ -88,9 +92,50 @@ def validate(directory=None):
         if row.get('type')=='5' and int(row.get('bossId') or 0)>0 and (row['bossId'] not in monster_ids or row.get('sceneId') not in scene_ids or row.get('data') not in scene_ids):errors.append('Island challenge has an invalid source/destination/monster')
     for row in rows.get('GeneralSkinRef',[]):
         if row.get('generalId') not in general_ids:errors.append('Skin refers to an unknown character: '+str(row.get('skinId')))
+    for table,columns in required.items():
+        for row in rows.get(table,[]):
+            for column in columns:
+                if column in {'attrs','monsterId'}:continue
+                try:
+                    value=int(row[column])
+                    if column in {'refId','maxLevel','type','speed'} and value<=0:raise ValueError()
+                except (KeyError,TypeError,ValueError):errors.append(f'{table}: invalid integer {column}')
+    if not any(r.get('refId')=='1' for r in rows.get('VoyageTitleRef',[])):
+        errors.append('VoyageTitleRef: required initial title refId 1 is missing')
     if errors:raise ValueError('\n'.join(errors[:30]))
+    startup_smoke(directory)
+    if directory == DATA/'tables':validate_metadata(directory.parent)
     print(f'Validated {len(rows)} tables / {sum(map(len,rows.values()))} rows and critical boss/skin joins.')
     return rows
+
+def validate_metadata(data):
+    """Protocol metadata is a separate contract from table/startup validation."""
+    try:
+        catalog=json.loads((data/'catalog.json').read_text(encoding='utf8'))
+        schemas=json.loads((data/'schemas.json').read_text(encoding='utf8'))
+        if not isinstance(catalog,dict) or not isinstance(catalog.get('commands'),list) or not catalog['commands'] or not isinstance(catalog.get('initCommandIds'),list):
+            raise ValueError('catalog.json: expected nonempty commands and initCommandIds')
+        ids=[r['id'] for r in catalog['commands']]
+        if any(type(i) is not int for i in ids) or len(ids)!=len(set(ids)) or any(type(i) is not int or i not in ids for i in catalog['initCommandIds']):
+            raise ValueError('catalog.json: invalid command IDs or initialization references')
+        if not isinstance(schemas,dict) or not schemas or any(not isinstance(r,dict) or not isinstance(r.get('fields'),list) for r in schemas.values()):
+            raise ValueError('schemas.json: expected named schemas with field lists')
+    except (OSError,KeyError,TypeError,json.JSONDecodeError) as error:
+        raise ValueError(f'Runtime protocol metadata is missing or invalid: {error}') from error
+
+def startup_smoke(directory):
+    """Exercise seed, normalization and reload using disposable local accounts."""
+    engine=str(ROOT/'engine')
+    if engine not in sys.path:sys.path.insert(0,engine)
+    from offline_core import OfflineStore
+    try:
+        with tempfile.TemporaryDirectory(prefix='pirate-startup-') as folder:
+            store=OfflineStore(folder,data_path=directory)
+            store.snapshot('pirate01')
+            reloaded=OfflineStore(folder,data_path=directory)
+            reloaded.snapshot('pirate01')
+    except Exception as error:
+        raise ValueError(f'Captain startup/load failed for candidate tables: {type(error).__name__}: {error}') from error
 
 def build():
     dist=ROOT/'dist'
