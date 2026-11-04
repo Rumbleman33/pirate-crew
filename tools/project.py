@@ -100,6 +100,11 @@ def build():
     if ASSETS.exists():shutil.copytree(ASSETS,dist)
     else:dist.mkdir()
     shutil.copytree(ROOT/'web/public',dist,dirs_exist_ok=True)
+    shutil.copy2(ROOT/'web/public/index.html',dist/'guides.html')
+    from guide_catalog import load_tables, compile_catalog
+    table_source=ASSETS/'data/fleet-tables'
+    if not (dist/'data/guide-catalog.json').exists() and table_source.is_dir():
+        write_json(dist/'data/guide-catalog.json',compile_catalog(load_tables(table_source)))
     full=(DATA/'tables/GeneralRef.csv').is_file() and (dist/'game/bundle-offline.js').is_file() and (dist/'pyodide/pyodide.js').is_file()
     if full:
         validate()
