@@ -38,7 +38,33 @@ function isolatedPetBoard(catalog){
  const report=petIsolatedResults,s=section('Pet skills: isolated test rankings','guide-rankings');s.classList.add('guide-rankings');
  s.append(node('p',`${report.tested} pets tested · skill level ${report.level} · ${report.windowMs/1000}s window · ${report.seedCount} matched seeds. Choose a role to compare measured results. Equal results share a rank.`));
  const picker=node('select');picker.setAttribute('aria-label','Pet ranking role');for(const role of report.roles){const o=node('option',role.label);o.value=role.id;picker.append(o);}const description=node('p'),list=node('div','','isolated-rank-list');
- function draw(){const role=report.roles.find(r=>r.id===picker.value)||report.roles[0];description.textContent=role.description;const rows=[...report.rows].sort((a,b)=>(a.ranks[role.id]??Infinity)-(b.ranks[role.id]??Infinity)||a.name.localeCompare(b.name));list.replaceChildren();for(const row of rows){const line=node('div','','isolated-rank-row'),rank=row.ranks[role.id];line.append(node('strong',rank?'#'+rank:'—','isolated-rank-number'));const entity=catalog?.systems?.pets?.find(e=>String(e.id)===String(row.petId));line.append(entity?entityCard(entity):node('strong',row.name));const value=Number(row[role.metric]);line.append(node('span',Number.isFinite(value)?value.toLocaleString('en-US',{maximumFractionDigits:2})+' '+role.unit:String(row[role.metric]??'—'),'isolated-rank-value'));list.append(line);}}
+ function draw(){
+  const role=report.roles.find(item=>item.id===picker.value)||report.roles[0];
+  const measured=row=>Number(row[role.metric]);
+  const best=Math.max(...report.rows.map(measured));
+  description.textContent=role.description+' Tiers compare the measured effect with the best result in this role. S ≥90%, A ≥70%, B ≥40%, C >0%. Equal scores stay together.';
+  const ranked=[...report.rows].sort((a,b)=>measured(b)-measured(a)||a.name.localeCompare(b.name));
+  const entities=new Map((catalog?.systems?.pets||[]).map(e=>[String(e.id),e]));
+  const bands=[['S',0.9],['A',0.7],['B',0.4],['C',0]];
+  const groups=new Map([...bands.map(([tier])=>tier),'No gain'].map(tier=>[tier,[]]));
+  for(const row of ranked){
+   const value=measured(row);
+   const tier=value>0?bands.find(([,minimum])=>value>=best*minimum)[0]:'No gain';
+   groups.get(tier).push(row);
+  }
+  list.replaceChildren();
+  for(const [tier,rows] of groups){
+   if(!rows.length)continue;
+   const band=node('div','','tier-row'),items=node('div','','tier-items');
+   band.append(node('strong',tier,'tier-mark'),items);
+   for(const row of rows){
+    const card=node('div','','tier-pick'),entity=entities.get(String(row.petId));
+    card.append(entity?entityCard(entity):node('strong',row.name),node('small',measured(row).toLocaleString('en-US',{maximumFractionDigits:2})+' '+role.unit));
+    items.append(card);
+   }
+   list.append(band);
+  }
+ }
  picker.addEventListener('change',draw);s.append(picker,description,list);const methodology=node('details');methodology.append(node('summary','Test conditions and interpretation'),node('p',typeof report.method==='string'?report.method:JSON.stringify(report.method)));for(const b of report.boundaries)methodology.append(node('p',b));methodology.append(table(['Fixture','Value'],Object.entries(report.fixture).map(([k,v])=>[label(k),typeof v==='object'?JSON.stringify(v):v])));s.append(methodology);draw();return s;
 }
 function tierBoard(g,id,catalog,report){if(id==='pets')return isolatedPetBoard(catalog);const s=section(id==='pets'?'Pet skill test results':'Tested build rankings','guide-rankings');s.classList.add('guide-rankings');const result=validatedRankings(report,id,catalog);if(!result){s.append(node('p','Rankings are withheld until every available choice has passed the documented engine test matrix. Descriptions and imported stats below are reference information; they are not evidence of comparative performance.','notice'));return s;}s.append(node('p',`Tested capture ${report.build} · ${result.scenarios.join(' / ')}. Rankings apply to these conditions; inspect coverage and sample counts before changing your build.`,'tier-disclaimer'));for(const tier of ['S','A','B','C']){const row=node('div','',`tier-row tier-${tier}`),items=node('div','','tier-items');row.append(node('strong',tier,'tier-mark'),items);for(const entry of result.entries.filter(e=>e.tier===tier)){const item=node('div','','tier-pick'),entity=catalog.systems[id].find(e=>e.id===entry.entityId);item.append(entityCard(entity),node('p',entry.reason),node('small',`${entry.battles} battles · win rate ${entry.winRate} · interval ${entry.interval}`));items.append(item);}s.append(row);}return s;}
